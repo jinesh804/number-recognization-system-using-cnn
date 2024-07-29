@@ -1,0 +1,74 @@
+
+
+import tensorflow as tf
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_lfw_people
+lfw_dataset = fetch_lfw_people(min_faces_per_person=70, resize=0.4)
+mnist = tf.keras.datasets.mnist
+(x_train, y_train),(x_test, y_test) = mnist.load_data()
+print(x_train.shape)
+
+print(y_train.shape)
+print(x_test.shape)
+print(y_test.shape)
+np.set_printoptions(threshold=np.inf, linewidth=400)
+print(x_train[30])
+plt.imshow(x_train[30],cmap='gray')
+
+plt.show()
+'''
+x_train, x_test = x_train / 255.0, x_test / 255.0
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Flatten(input_shape=(28, 28)),
+  tf.keras.layers.Dense(256, activation=tf.nn.relu),
+  tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+])
+model.compile(optimizer='sgd',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+history = model.fit(x_train,y_train,epochs=15)
+plt.plot(history.history['loss'])
+plt.show()
+print(x_train.shape)'''
+
+x_train=x_train.reshape(60000, 28, 28, 1)
+x_train=x_train / 255.0
+x_test = x_test.reshape(10000, 28, 28, 1)
+x_test=x_test/255.0
+
+print(x_train.shape)
+
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(28, 28, 1)),
+  tf.keras.layers.MaxPooling2D(2, 2),
+  tf.keras.layers.Flatten(),
+  tf.keras.layers.Dense(128, activation='relu'),
+  tf.keras.layers.Dense(10, activation='softmax')
+])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history = model.fit(x_train,y_train,epochs=10)
+plt.plot(history.history['loss'])
+plt.show()
+model.summary()
+model.evaluate(x_test, y_test)
+test_image_path = r'C:\Users\jinesh jain\pandas\th (1).jpg'
+
+test_image = cv2.imread(test_image_path, cv2.IMREAD_GRAYSCALE)
+test_image = cv2.resize(test_image, (28, 28))
+test_image = test_image / 255.0  # Normalize pixel values
+
+# Reshape the image to match the input shape expected by the model
+test_image = np.expand_dims(test_image, axis=-1)  # Add an extra dimension for the channel
+
+# Make predictions
+predictions = model.predict(np.array([test_image]))
+
+# Get the predicted class (index with the highest probability)
+predicted_class = np.argmax(predictions)
+
+# Display the test image
+plt.imshow(test_image[:, :, 0], cmap='gray')
+plt.title(f"Predicted Class: {predicted_class}")
+plt.show()
